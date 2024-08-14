@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Cinema.web": {
+    "Cinema.Web": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",

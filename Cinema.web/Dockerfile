@@ -18,4 +18,4 @@ COPY --from=build /app/out ./
 # Cấu hình cổng mà ứng dụng sẽ lắng nghe
 EXPOSE 44332
 
-ENTRYPOINT ["dotnet", "Cinema.web.dll"]
+ENTRYPOINT ["dotnet", "Cinema.Web.dll"]

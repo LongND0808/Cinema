@@ -1,29 +1,58 @@
+ï»¿using Cinema.Core.InterfaceRepository;
+using Cinema.Infrastructure.DataContext;
+using Cinema.Infrastructure.ImplementRepository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Cinema.Web.Configuration;
+using Cinema.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+builder.Services.AddIdentity<User, Role>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddIdentityServer()
+    .AddInMemoryIdentityResources(Config.IdentityResources)
+    .AddInMemoryApiScopes(Config.ApiScopes)
+    .AddInMemoryClients(Config.Clients)
+    .AddDeveloperSigningCredential()
+    .AddAspNetIdentity<User>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.Authority = builder.Configuration["Jwt:Authority"];
+    options.Audience = builder.Configuration["Jwt:Audience"];
+    options.RequireHttpsMetadata = false;
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        // N?u mu?n Swagger UI ???c hi?n th? ? ???ng d?n root "/"
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-
-        // N?u mu?n Swagger UI t? ??ng load khi truy c?p root "/"
-        c.RoutePrefix = string.Empty; 
-    });
+    app.UseSwaggerUI();
 }
 
-// Lo?i b? HttpsRedirection ?? không t? ??ng chuy?n ??i HTTP sang HTTPS
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
+app.UseIdentityServer();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
