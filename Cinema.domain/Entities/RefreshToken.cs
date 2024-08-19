@@ -11,9 +11,8 @@ namespace Cinema.Domain.Entities
     {
         public string Token { get; set; }
         public DateTime ExpiredTime { get; set; }
-        public int UderId { get; set; }
+        public int UserId { get; set; }
 
-        [ForeignKey("UserId")]
         public virtual User? Users { get; set; }
     }
 }

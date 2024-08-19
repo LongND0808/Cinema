@@ -22,10 +22,8 @@ namespace Cinema.Domain.Entities
         public string Trailer { get; set; }
         public bool IsActive { get; set; }
 
-        [ForeignKey("MovieTypeId")]
         public virtual MovieType? MovieType { get; set; }
 
-        [ForeignKey("RateId")]
         public virtual Rate? Rate { get; set; }
 
         public virtual ICollection<Schedule>? Schedules { get; set; }

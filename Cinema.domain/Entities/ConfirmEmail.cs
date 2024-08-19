@@ -15,7 +15,6 @@ namespace Cinema.Domain.Entities
         public string? ConfirmCode { get; set; }
         public bool IsConfirm { get; set; }
 
-        [ForeignKey("UserId")]
         public virtual User? User { get; set; }
     }
 }

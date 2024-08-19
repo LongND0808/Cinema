@@ -16,13 +16,10 @@ namespace Cinema.Domain.Entities
         public bool IsActive { get; set; }
         public int SeatTypeId { get; set; }
 
-        [ForeignKey("SeatTypeId")]
         public virtual SeatType? SeatType { get; set; }
 
-        [ForeignKey("RoomId")]
         public virtual Room? Room { get; set; }
 
-        [ForeignKey("SeatStatusId")]
         public virtual SeatStatus? SeatStatus { get; set; }
 
         public virtual ICollection<Ticket>? Tickets { get; set; }

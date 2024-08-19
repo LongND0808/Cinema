@@ -13,10 +13,8 @@ namespace Cinema.Domain.Entities
         public int BillId { get; set; }
         public int TicketId { get; set; }
 
-        [ForeignKey("BillId")]
         public virtual Bill? Bill { get; set; }
 
-        [ForeignKey("TicketId")]
         public virtual Ticket? Ticket { get; set; }
 
     }

@@ -35,6 +35,7 @@ namespace Cinema.Infrastructure.DataContext
         public virtual DbSet<SeatStatus> SeatStatuses { get; set; }
         public virtual DbSet<SeatType> SeatTypes { get; set; }
         public virtual DbSet<Ticket> Tickets { get; set; }
+        public virtual DbSet<UserRole> UserRoles {  get; set; }
         public virtual DbSet<UserStatus> UserStatuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

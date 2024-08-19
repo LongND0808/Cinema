@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Cinema.Core.IService;
+using Cinema.Core.RequestModel;
+using Cinema.Core.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Cinema.web.Controllers
 {
@@ -6,36 +10,25 @@ namespace Cinema.web.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult GetUsers()
+        private readonly IUserService _userService;
+
+        public UserController(IUserService userService)
         {
-            var users = new List<string> { "User1", "User2", "User3" };
-            return Ok(users);
+            _userService = userService;
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetUser(int id)
+        [HttpPost("login")]
+        public IActionResult Login(LoginRequestModel request)
         {
-            var user = $"User{id}";
-            return Ok(user);
+            var response = _userService.Login(request);
+            return Ok(response);
         }
 
-        [HttpPost]
-        public IActionResult CreateUser([FromBody] string user)
+        [HttpPost("check-role-admin")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult checkRoleAdmin()
         {
-            return Ok($"User '{user}' đã được tạo.");
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult UpdateUser(int id, [FromBody] string user)
-        {
-            return Ok($"User ID '{id}' đã được cập nhật thành '{user}'.");
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult DeleteUser(int id)
-        {
-            return Ok($"User ID '{id}' đã được xóa.");
+            return Ok("Admin");
         }
     }
 }

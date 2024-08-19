@@ -18,10 +18,8 @@ namespace Cinema.Domain.Entities
         public int RoomId { get; set; }
         public bool IsActive { get; set; }
 
-        [ForeignKey("MovieId")]
         public virtual Movie? Movie { get; set; }
 
-        [ForeignKey("RoomId")]
         public virtual Room? Room { get; set; }
 
         public virtual ICollection<Ticket>? Ticket { get; set; }

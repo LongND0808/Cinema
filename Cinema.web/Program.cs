@@ -1,11 +1,15 @@
-﻿using Cinema.Core.InterfaceRepository;
-using Cinema.Infrastructure.DataContext;
+﻿using Cinema.Infrastructure.DataContext;
 using Cinema.Infrastructure.ImplementRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Cinema.Web.Configuration;
 using Cinema.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Cinema.Core.IService;
+using Cinema.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Cinema.Core.InterfaceRepository;
+using Cinema.Core.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +17,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddIdentity<User, Role>()
     .AddEntityFrameworkStores<ApplicationDbContext>()

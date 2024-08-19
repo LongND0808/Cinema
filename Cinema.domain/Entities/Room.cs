@@ -21,7 +21,6 @@ namespace Cinema.Domain.Entities
 
         public virtual ICollection<Seat>? Seats { get; set; }
 
-        [ForeignKey("CinemaId")]
         public virtual Cinema? Cinema { get; set; }
 
     }

@@ -19,13 +19,10 @@ namespace Cinema.Domain.Entities
         public bool IsActive { get; set; }
         public int BillStatusId { get; set; }
 
-        [ForeignKey("CustomerId")]
         public virtual User? User { get; set; }
 
-        [ForeignKey("PromotionId")]
         public virtual Promotion? Promotion { get; set; }
 
-        [ForeignKey("BillStatusId")]
         public virtual BillStatus? BillStatuses { get; set; }
 
         public virtual BillFood? BillFood { get; set; }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cinema.core.ResponseModel
+namespace Cinema.Core.ResponseModel
 {
     public class LoginResponseModel
     {

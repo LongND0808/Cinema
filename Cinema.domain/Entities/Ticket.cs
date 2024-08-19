@@ -17,10 +17,8 @@ namespace Cinema.Domain.Entities
 
         public virtual ICollection<BillTicket>? BillTickets { get; set; }
 
-        [ForeignKey("ScheduleId")]
         public virtual Schedule? Schedule { get; set; }
 
-        [ForeignKey("SeatId")]
         public virtual Seat? Seat { get; set; }
 
     }

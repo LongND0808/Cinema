@@ -1,12 +1,12 @@
-﻿using Cinema.core.RequestModel;
-using Cinema.core.ResponseModel;
+﻿using Cinema.Core.RequestModel;
+using Cinema.Core.ResponseModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cinema.core.IService
+namespace Cinema.Core.IService
 {
     public interface IUserService
     {

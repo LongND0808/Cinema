@@ -1,10 +1,10 @@
 ﻿using Cinema.Core.InterfaceRepository;
+using Cinema.Domain.Entities;
 using Cinema.Infrastructure.DataContext;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Cinema.Infrastructure.ImplementRepository
@@ -18,12 +18,12 @@ namespace Cinema.Infrastructure.ImplementRepository
             _context = context;
         }
 
-        public async Task<TEntity> GetByIdAsync(int id)
+        public async Task<TEntity?> GetByIdAsync(int id)
         {
             return await _context.Set<TEntity>().FindAsync(id);
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync()
+        public async Task<IEnumerable<TEntity>?> GetAllAsync()
         {
             return await _context.Set<TEntity>().ToListAsync();
         }
@@ -45,6 +45,31 @@ namespace Cinema.Infrastructure.ImplementRepository
             _context.Set<TEntity>().Remove(entity);
             await _context.SaveChangesAsync();
         }
-    }
 
+        public async Task<TEntity?> GetUserByUserNameAsync(string username)
+        {
+            if (typeof(TEntity) == typeof(User))
+            {
+                var res = await _context.Set<User>()
+                    .FirstOrDefaultAsync(u => u.UserName == username) as TEntity;
+
+                return res;
+            }
+
+            throw new InvalidOperationException("Invalid entity type");
+        }
+
+        public async Task<IEnumerable<int>?> GetRoleIdsByUserID(int userId)
+        {
+            if (typeof(TEntity) == typeof(UserRole))
+            {
+                var res = await _context.Set<UserRole>()
+                    .Where(u => u.UserID == userId).Select(x => x.Id).ToListAsync();
+
+                return res;
+            }
+
+            throw new InvalidOperationException("Invalid entity type");
+        }
+    }
 }

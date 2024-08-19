@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cinema.web", "Cinema.web\Cinema.web.csproj", "{15483D7B-C57A-4FED-B271-7326087F6DDA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cinema.Web", "Cinema.web\Cinema.Web.csproj", "{15483D7B-C57A-4FED-B271-7326087F6DDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cinema.core", "Cinema.core\Cinema.core.csproj", "{B93E9878-DAE3-4625-B1FB-408C28475BF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cinema.Core", "Cinema.core\Cinema.Core.csproj", "{B93E9878-DAE3-4625-B1FB-408C28475BF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cinema.domain", "Cinema.domain\Cinema.domain.csproj", "{A0917E3C-F444-4E64-8551-AFFBA06C5A4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cinema.Domain", "Cinema.domain\Cinema.Domain.csproj", "{A0917E3C-F444-4E64-8551-AFFBA06C5A4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cinema.infrastructure", "Cinema.infrastructure\Cinema.infrastructure.csproj", "{3AEF7B87-5C5C-41FF-A9BC-BAC67A3EC5F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cinema.Infrastructure", "Cinema.infrastructure\Cinema.Infrastructure.csproj", "{3AEF7B87-5C5C-41FF-A9BC-BAC67A3EC5F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
