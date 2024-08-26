@@ -10,8 +10,8 @@ namespace Cinema.Domain.Entities
     public class Ticket : BaseEntity
     {
         public string Code { get; set; }
-        public int ScheduleId { get; set; }
-        public int SeatId { get; set; }
+        public Guid ScheduleId { get; set; }
+        public Guid SeatId { get; set; }
         public bool IsActive { get; set; }
         public double PriceTicket { get; set; }
 

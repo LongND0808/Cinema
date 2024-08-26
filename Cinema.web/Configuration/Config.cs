@@ -1,35 +1,28 @@
 ﻿using IdentityServer4.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace Cinema.Web.Configuration
 {
-    public static class Config
+    public class Config
     {
-        public static IEnumerable<IdentityResource> IdentityResources =>
-            new IdentityResource[]
-            {
-                new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
-            };
+        public IEnumerable<IdentityResource> IdentityResources { get; }
+        public IEnumerable<ApiScope> ApiScopes { get; }
+        public IEnumerable<ApiResource> ApiResources { get; }
+        public IEnumerable<Client> Clients { get; }
 
-        public static IEnumerable<ApiScope> ApiScopes =>
-            new ApiScope[]
-            {
-                new ApiScope("api1", "My API")
-            };
+        public Config(IConfiguration configuration)
+        {
+            IdentityResources = configuration.GetSection("IdentityServer:IdentityResources")
+                .Get<IEnumerable<IdentityResource>>();
 
-        public static IEnumerable<Client> Clients =>
-            new Client[]
-            {
-                new Client
-                {
-                    ClientId = "client",
-                    AllowedGrantTypes = GrantTypes.ClientCredentials,
-                    ClientSecrets =
-                    {
-                        new Secret("secret".Sha256())
-                    },
-                    AllowedScopes = { "api1" }
-                }
-            };
+            ApiScopes = configuration.GetSection("IdentityServer:ApiScopes")
+                .Get<IEnumerable<ApiScope>>();
+
+            ApiResources = configuration.GetSection("IdentityServer:ApiResources")
+                .Get<IEnumerable<ApiResource>>();
+
+            Clients = configuration.GetSection("IdentityServer:Clients")
+                .Get<IEnumerable<Client>>();
+        }
     }
 }

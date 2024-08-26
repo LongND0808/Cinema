@@ -9,10 +9,10 @@ namespace Cinema.Domain.Entities
 {
     public class ConfirmEmail : BaseEntity
     {
-        public int? UserId { get; set; }
+        public Guid UserId { get; set; }
         public DateTime RequiredDateTime { get; set; }
         public DateTime ExpiredDateTime { get; set; }
-        public string? ConfirmCode { get; set; }
+        public string ConfirmCode { get; set; }
         public bool IsConfirm { get; set; }
 
         public virtual User? User { get; set; }

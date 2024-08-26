@@ -10,6 +10,11 @@ using Cinema.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Cinema.Core.InterfaceRepository;
 using Cinema.Core.Identity;
+using Cinema.Core.Email;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Cinema.Core.Converters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,17 +23,27 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+#region Add Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+#endregion
+
+#region Add Converter
+builder.Services.AddTransient<UserConverter>();
+#endregion
 
 builder.Services.AddIdentity<User, Role>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+var config = new Config(builder.Configuration);
+
 builder.Services.AddIdentityServer()
-    .AddInMemoryIdentityResources(Config.IdentityResources)
-    .AddInMemoryApiScopes(Config.ApiScopes)
-    .AddInMemoryClients(Config.Clients)
+    .AddInMemoryIdentityResources(config.IdentityResources)
+    .AddInMemoryApiScopes(config.ApiScopes)
+    .AddInMemoryClients(config.Clients)
     .AddDeveloperSigningCredential()
     .AddAspNetIdentity<User>();
 
@@ -36,13 +51,32 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
 {
-    options.Authority = builder.Configuration["Jwt:Authority"];
-    options.Audience = builder.Configuration["Jwt:Audience"];
+    options.SaveToken = true;
     options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ClockSkew = TimeSpan.Zero,
+
+        ValidAudience = builder.Configuration["JWT:ValidAudience"],
+        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
+    };
 });
+
+var emailConfig = builder.Configuration
+    .GetSection("EmailConfiguration")
+    .Get<EmailConfiguration>();
+
+builder.Services.AddSingleton(emailConfig);
+
+builder.Services.AddTransient<EmailService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

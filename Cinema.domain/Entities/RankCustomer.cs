@@ -12,8 +12,8 @@ namespace Cinema.Domain.Entities
         public string Description { get; set; }
         public string Name { get; set; }
         public bool IsActive { get; set; }
+        public double Discount { get; set; }
 
-        public virtual ICollection<Promotion>? Promotions { get; set; }
         public virtual ICollection<User>? Users { get; set; }
     }
 }

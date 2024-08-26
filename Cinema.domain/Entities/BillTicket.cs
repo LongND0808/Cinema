@@ -10,8 +10,8 @@ namespace Cinema.Domain.Entities
     public class BillTicket : BaseEntity
     {
         public int Quantity { get; set; }
-        public int BillId { get; set; }
-        public int TicketId { get; set; }
+        public Guid BillId { get; set; }
+        public Guid TicketId { get; set; }
 
         public virtual Bill? Bill { get; set; }
 

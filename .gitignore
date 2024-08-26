@@ -29,3 +29,6 @@ out/
 
 # Ignore packages
 packages/
+
+# Ignore node_modules
+node_modules/

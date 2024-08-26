@@ -13,9 +13,9 @@ namespace Cinema.Domain.Entities
         public DateTime StartAt { get; set; }
         public DateTime EndAt { get; set; }
         public string Code { get; set; }
-        public int MovieId { get; set; }
+        public Guid MovieId { get; set; }
         public string Name { get; set; }
-        public int RoomId { get; set; }
+        public Guid RoomId { get; set; }
         public bool IsActive { get; set; }
 
         public virtual Movie? Movie { get; set; }

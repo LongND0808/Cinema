@@ -1,4 +1,5 @@
-﻿using Cinema.Core.RequestModel;
+﻿using Cinema.Core.DTOs;
+using Cinema.Core.RequestModel;
 using Cinema.Core.ResponseModel;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace Cinema.Core.IService
 {
     public interface IUserService
     {
-        Task<LoginResponseModel> Login(LoginRequestModel request);
+        Task<BaseResponseModel<LoginResponseModel>> Login(LoginRequestModel request);
+        Task<BaseResponseModel<UserDTO>> Register(RegisterRequestModel request);
     }
 }

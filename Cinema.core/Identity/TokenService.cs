@@ -1,50 +1,89 @@
-﻿using IdentityServer4.Services;
-using IdentityServer4.Models;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using IdentityServer4.Validation;
-using Cinema.Domain.Entities;
+﻿using Cinema.Domain.Entities;
 using Cinema.Core.InterfaceRepository;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+using IdentityModel;
+using Microsoft.AspNetCore.Identity;
 
 public class TokenService : Cinema.Core.Identity.ITokenService
 {
-    private readonly ITokenCreationService _tokenCreationService;
-    private readonly ITokenService _tokenService;
-    private readonly IRepository<Cinema.Domain.Entities.RefreshToken> _refreshTokenRepository;
+    private readonly IRepository<RefreshToken> _refreshTokenRepository;
+    private readonly IConfiguration _configuration;
+    private readonly UserManager<User> _userManager;
 
-    public TokenService(ITokenCreationService tokenCreationService)
+    public TokenService(IRepository<RefreshToken> refreshTokenRepository, IConfiguration configuration, UserManager<User> userManager)
     {
-        _tokenCreationService = tokenCreationService;
+        _refreshTokenRepository = refreshTokenRepository;
+        _configuration = configuration;
+        _userManager = userManager;
     }
 
-    public async Task<string> CreateAccessTokenAsync(User user, ICollection<Claim> claims)
+    public async Task<string> CreateAccessTokenAsync(User user)
     {
-        var token = new Token
+        var secretKey = _configuration["JWT:Secret"];
+        var issuer = _configuration["JWT:ValidIssuer"];
+        var audience = _configuration["JWT:ValidAudience"];
+        var tokenValidityInHours = int.TryParse(_configuration["JWT:TokenValidityInHours"], out int hours) ? hours : 1;
+
+        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+
+        var userRoles = await _userManager.GetRolesAsync(user);
+
+        var claims = new List<Claim>
+            {
+                new(JwtClaimTypes.Id, user.Id.ToString()),
+                new(JwtClaimTypes.Name, user.UserName),
+                new(JwtClaimTypes.Email, user.Email),
+                new(JwtClaimTypes.GivenName, user.FullName),
+            };
+
+        foreach (var role in userRoles)
         {
-            Claims = claims,
-            Lifetime = 3600, 
-            AccessTokenType = AccessTokenType.Jwt,
-            ClientId = "client", 
-            Description = "Access Token for User", 
-            Audiences = { "api1" } 
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(tokenValidityInHours),
+            Issuer = issuer,
+            Audience = audience,
+            SigningCredentials = new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
         };
 
-        var createdToken = await _tokenCreationService.CreateTokenAsync(token);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var securityToken = tokenHandler.CreateToken(tokenDescriptor);
+        var tokenString = tokenHandler.WriteToken(securityToken);
 
-        return createdToken;
+        return tokenString;
     }
-
 
     public async Task<string> CreateRefreshTokenAsync(User user)
     {
-        var refreshToken = Guid.NewGuid().ToString();
+        var existingTokens = await _refreshTokenRepository.GetAllAsync(x => x.UserId == user.Id);
 
-        var refreshTokenEntity = new Cinema.Domain.Entities.RefreshToken
+        var lastToken = existingTokens.LastOrDefault();
+
+        if (lastToken != null && lastToken.ExpiredTime > DateTime.UtcNow)
+        {
+            return lastToken.Token;
+        }
+
+        var refreshToken = Guid.NewGuid().ToString();
+        var refreshTokenValidity = int.TryParse(_configuration["JWT:RefreshTokenValidity"], out int validity) ? validity : 7;
+
+        var refreshTokenEntity = new RefreshToken
         {
             Token = refreshToken,
             UserId = user.Id,
-            ExpiredTime = DateTime.UtcNow.AddDays(30), 
+            CreateTime = DateTime.UtcNow,
+            ExpiredTime = DateTime.UtcNow.AddDays(refreshTokenValidity),
         };
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity);

@@ -1,5 +1,6 @@
 ﻿using Cinema.Core.IService;
 using Cinema.Core.RequestModel;
+using Cinema.Core.ResponseModel;
 using Cinema.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,17 +19,16 @@ namespace Cinema.web.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login(LoginRequestModel request)
+        public async Task<IActionResult> Login(LoginRequestModel request)
         {
-            var response = _userService.Login(request);
+            var response = await _userService.Login(request);
             return Ok(response);
         }
-
-        [HttpPost("check-role-admin")]
-        [Authorize(Roles = "Admin")]
-        public IActionResult checkRoleAdmin()
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterRequestModel request)
         {
-            return Ok("Admin");
+            var response = await _userService.Register(request);
+            return Ok(response);
         }
     }
 }

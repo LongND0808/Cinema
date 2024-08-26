@@ -9,9 +9,9 @@ namespace Cinema.Domain.Entities
 {
     public class BillFood : BaseEntity
     {
-        public int? Quantity { get; set; }
-        public int BillId { get; set; }
-        public int? FoodId { get; set; }
+        public int Quantity { get; set; }
+        public Guid BillId { get; set; }
+        public Guid FoodId { get; set; }
 
         public virtual Bill? Bill { get; set; }
         public virtual Food? Food { get; set; }

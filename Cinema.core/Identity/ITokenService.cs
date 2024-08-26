@@ -10,7 +10,7 @@ namespace Cinema.Core.Identity
 {
     public interface ITokenService
     {
-        Task<string> CreateAccessTokenAsync(User user, ICollection<Claim> claims);
+        Task<string> CreateAccessTokenAsync(User user);
         Task<string> CreateRefreshTokenAsync(User user);
     }
 }

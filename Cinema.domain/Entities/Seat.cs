@@ -12,9 +12,9 @@ namespace Cinema.Domain.Entities
         public int Number { get; set; }
         public int SeatStatusId { get; set; }
         public string Line { get; set; }
-        public int RoomId { get; set; }
+        public Guid RoomId { get; set; }
         public bool IsActive { get; set; }
-        public int SeatTypeId { get; set; }
+        public Guid SeatTypeId { get; set; }
 
         public virtual SeatType? SeatType { get; set; }
 
