@@ -1,7 +1,0 @@
-- 4 layer structure
-- using request and response model on business
-- using global context
-- create repository at the infrastructure layer
-- using identity server 4 for authentication
-- build file appsetting.json
-

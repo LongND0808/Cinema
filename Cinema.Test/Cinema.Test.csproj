@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cinema.core\Cinema.Core.csproj" />
+    <ProjectReference Include="..\Cinema.Core\Cinema.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

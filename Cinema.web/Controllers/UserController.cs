@@ -5,7 +5,7 @@ using Cinema.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Cinema.web.Controllers
+namespace Cinema.Web.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

@@ -23,7 +23,7 @@ namespace Cinema.Tests.Services
     {
         private readonly Mock<UserManager<User>> _userManagerMock;
         private readonly Mock<SignInManager<User>> _signInManagerMock;
-        private readonly Mock<Identity.ITokenService> _tokenServiceMock;
+        private readonly Mock<Core.Identity.ITokenService> _tokenServiceMock;
         private readonly Mock<RoleManager<Role>> _roleManagerMock;
         private readonly Mock<EmailService> _emailServiceMock;
         private readonly Mock<IRepository<RankCustomer>> _rankCustomerRepositoryMock;
