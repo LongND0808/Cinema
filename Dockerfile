@@ -5,11 +5,11 @@ WORKDIR /app
 # Copy the solution and project files
 COPY Cinema.sln .
 COPY Cinema.Common/Cinema.Common.csproj Cinema.Common/
-COPY Cinema.core/Cinema.Core.csproj Cinema.Core/
-COPY Cinema.domain/Cinema.domain.csproj Cinema.Domain/
-COPY Cinema.infrastructure/Cinema.infrastructure.csproj Cinema.Infrastructure/
+COPY Cinema.Core/Cinema.Core.csproj Cinema.Core/
+COPY Cinema.Domain/Cinema.Domain.csproj Cinema.Domain/
+COPY Cinema.Infrastructure/Cinema.Infrastructure.csproj Cinema.Infrastructure/
 COPY Cinema.Test/Cinema.Test.csproj Cinema.Test/
-COPY Cinema.web/Cinema.web.csproj Cinema.Web/
+COPY Cinema.Web/Cinema.Web.csproj Cinema.Web/
 
 # Restore dependencies
 RUN dotnet restore
