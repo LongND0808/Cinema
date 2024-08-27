@@ -24,7 +24,7 @@ namespace Cinema.Core.Services
         private readonly RoleManager<Role> _roleManager;
         private readonly SignInManager<User> _signInManager;
         private readonly Identity.ITokenService _tokenService;
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;
         private readonly IRepository<RankCustomer> _rankCustomerRepository;
         private readonly IRepository<UserStatus> _userStatusRepository;
         private readonly UserConverter _userConverter;
@@ -35,7 +35,7 @@ namespace Cinema.Core.Services
             SignInManager<User> signInManager,
             Identity.ITokenService tokenService,
             RoleManager<Role> roleManager,
-            EmailService emailService,
+            IEmailService emailService,
             IRepository<RankCustomer> rankCustomerRepository,
             IRepository<UserStatus> userStatusRepository,
             UserConverter userConverter,
@@ -159,7 +159,7 @@ namespace Cinema.Core.Services
             {
                 UserId = user.Id,
                 RequiredDateTime = DateTime.UtcNow,
-                ExpiredDateTime = DateTime.UtcNow.AddMinutes(5), 
+                ExpiredDateTime = DateTime.UtcNow.AddMinutes(5),
                 ConfirmCode = activeCode,
                 IsConfirm = false
             };

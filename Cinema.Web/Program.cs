@@ -14,6 +14,7 @@ using Cinema.Core.Email;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
 using Cinema.Core.Converters;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,7 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 #region Add Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 #endregion
 
 #region Add Converter
@@ -46,6 +48,15 @@ builder.Services.AddIdentityServer()
     .AddInMemoryClients(config.Clients)
     .AddDeveloperSigningCredential()
     .AddAspNetIdentity<User>();
+
+/*builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(80);
+    serverOptions.ListenAnyIP(443, listenOptions =>
+    {
+        listenOptions.UseHttps("D:\\My Projects\\Cinema\\certs\\aspnetapp.pfx", "longnd");
+    });
+});*/
 
 builder.Services.AddAuthentication(options =>
 {
@@ -75,8 +86,6 @@ var emailConfig = builder.Configuration
     .Get<EmailConfiguration>();
 
 builder.Services.AddSingleton(emailConfig);
-
-builder.Services.AddTransient<EmailService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

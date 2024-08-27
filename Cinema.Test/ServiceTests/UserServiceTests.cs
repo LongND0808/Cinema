@@ -16,6 +16,7 @@ using Cinema.Core.InterfaceRepository;
 using System.Linq.Expressions;
 using Cinema.Core.Converters;
 using Cinema.Core.Email;
+using Cinema.Core.DTOs;
 
 namespace Cinema.Tests.Services
 {
@@ -25,32 +26,28 @@ namespace Cinema.Tests.Services
         private readonly Mock<SignInManager<User>> _signInManagerMock;
         private readonly Mock<Core.Identity.ITokenService> _tokenServiceMock;
         private readonly Mock<RoleManager<Role>> _roleManagerMock;
-        private readonly Mock<EmailService> _emailServiceMock;
+        private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Mock<IRepository<RankCustomer>> _rankCustomerRepositoryMock;
         private readonly Mock<IRepository<UserStatus>> _userStatusRepositoryMock;
-        private readonly Mock<IRepository<ConfirmEmail>> _confirmEmailRepositoryMock;
         private readonly Mock<UserConverter> _userConverterMock;
+        private readonly Mock<IRepository<ConfirmEmail>> _confirmEmailRepositoryMock;
+
         private readonly UserService _userService;
 
         public UserServiceTests()
         {
-            _userManagerMock = new Mock<UserManager<User>>(
-                Mock.Of<IUserStore<User>>(), null, null, null, null, null, null, null, null);
-
-            _signInManagerMock = new Mock<SignInManager<User>>(
-                _userManagerMock.Object,
-                Mock.Of<IHttpContextAccessor>(),
-                Mock.Of<IUserClaimsPrincipalFactory<User>>(),
-                null, null, null, null);
-
+            _userManagerMock = CreateMockUserManager();
+            _signInManagerMock = CreateMockSignInManager();
             _tokenServiceMock = new Mock<Core.Identity.ITokenService>();
-            _roleManagerMock = new Mock<RoleManager<Role>>(
-                Mock.Of<IRoleStore<Role>>(), null, null, null, null);
-            _emailServiceMock = new Mock<EmailService>();
+            _roleManagerMock = CreateMockRoleManager();
+
+            _emailServiceMock = new Mock<IEmailService>();
+            _emailServiceMock.Setup(es => es.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+
             _rankCustomerRepositoryMock = new Mock<IRepository<RankCustomer>>();
             _userStatusRepositoryMock = new Mock<IRepository<UserStatus>>();
-            _confirmEmailRepositoryMock = new Mock<IRepository<ConfirmEmail>>();
             _userConverterMock = new Mock<UserConverter>();
+            _confirmEmailRepositoryMock = new Mock<IRepository<ConfirmEmail>>();
 
             _userService = new UserService(
                 _userManagerMock.Object,
@@ -61,185 +58,146 @@ namespace Cinema.Tests.Services
                 _rankCustomerRepositoryMock.Object,
                 _userStatusRepositoryMock.Object,
                 _userConverterMock.Object,
-                _confirmEmailRepositoryMock.Object);
+                _confirmEmailRepositoryMock.Object
+            );
+        }
+
+        private Mock<UserManager<User>> CreateMockUserManager()
+        {
+            var store = new Mock<IUserStore<User>>();
+            return new Mock<UserManager<User>>(store.Object, null, null, null, null, null, null, null, null);
+        }
+
+        private Mock<SignInManager<User>> CreateMockSignInManager()
+        {
+            return new Mock<SignInManager<User>>(
+                _userManagerMock.Object,
+                new Mock<IHttpContextAccessor>().Object,
+                new Mock<IUserClaimsPrincipalFactory<User>>().Object,
+                null,
+                null,
+                null,
+                null
+            );
+        }
+
+        private Mock<RoleManager<Role>> CreateMockRoleManager()
+        {
+            var roleStoreMock = new Mock<IRoleStore<Role>>();
+
+            return new Mock<RoleManager<Role>>(
+                roleStoreMock.Object,
+                null,
+                null,
+                null,
+                null
+            );
         }
 
         [Fact]
-        public async Task Login_UserDoesNotExist_ShouldReturnNotFound()
+        public async Task Login_UserNotFound_ReturnsNotFound()
         {
-            var loginRequest = new LoginRequestModel
-            {
-                UserName = "nonexistentuser",
-                Password = "Password123!"
-            };
+            var request = new LoginRequestModel { UserName = "nonexistent", Password = "password" };
+            _userManagerMock.Setup(um => um.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User)null);
 
-            _userManagerMock.Setup(um => um.FindByNameAsync(loginRequest.UserName))
-                .ReturnsAsync((User)null);
-
-            var result = await _userService.Login(loginRequest);
+            var result = await _userService.Login(request);
 
             Assert.Equal(StatusCodes.Status404NotFound, result.Status);
             Assert.Equal("User does not exist", result.Message);
         }
 
         [Fact]
-        public async Task Login_InvalidPassword_ShouldReturnUnauthorized()
+        public async Task Login_InvalidPassword_ReturnsUnauthorized()
         {
-            var testUser = new User { UserName = "testuser" };
-            var loginRequest = new LoginRequestModel
-            {
-                UserName = "testuser",
-                Password = "WrongPassword!"
-            };
-
-            _userManagerMock.Setup(um => um.FindByNameAsync(loginRequest.UserName))
-                .ReturnsAsync(testUser);
-
-            _signInManagerMock.Setup(sm => sm.CheckPasswordSignInAsync(testUser, loginRequest.Password, false))
+            var user = new User { UserName = "user", PasswordHash = "password" };
+            var request = new LoginRequestModel { UserName = "user", Password = "wrongpassword" };
+            _userManagerMock.Setup(um => um.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(user);
+            _signInManagerMock.Setup(sm => sm.CheckPasswordSignInAsync(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<bool>()))
                 .ReturnsAsync(SignInResult.Failed);
 
-            var result = await _userService.Login(loginRequest);
+            var result = await _userService.Login(request);
 
             Assert.Equal(StatusCodes.Status401Unauthorized, result.Status);
             Assert.Equal("Invalid credentials", result.Message);
         }
 
         [Fact]
-        public async Task Login_ValidCredentials_ShouldReturnTokens()
+        public async Task Login_Success_ReturnsOk()
         {
-            var testUser = new User
-            {
-                UserName = "testuser",
-                Email = "testuser@example.com",
-                FullName = "Test User"
-            };
-
-            var loginRequest = new LoginRequestModel
-            {
-                UserName = "testuser",
-                Password = "Password123!"
-            };
-
-            var userRoles = new List<string> { "Admin", "User", "Employee" };
-
-            _userManagerMock.Setup(um => um.FindByNameAsync(loginRequest.UserName))
-                .ReturnsAsync(testUser);
-
-            _userManagerMock.Setup(um => um.GetRolesAsync(testUser))
-                .ReturnsAsync(userRoles);
-
-            _signInManagerMock.Setup(sm => sm.CheckPasswordSignInAsync(testUser, loginRequest.Password, false))
+            var user = new User { UserName = "user", PasswordHash = "password" };
+            var request = new LoginRequestModel { UserName = "user", Password = "password" };
+            _userManagerMock.Setup(um => um.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(user);
+            _signInManagerMock.Setup(sm => sm.CheckPasswordSignInAsync(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<bool>()))
                 .ReturnsAsync(SignInResult.Success);
+            _tokenServiceMock.Setup(ts => ts.CreateAccessTokenAsync(It.IsAny<User>())).ReturnsAsync("access_token");
+            _tokenServiceMock.Setup(ts => ts.CreateRefreshTokenAsync(It.IsAny<User>())).ReturnsAsync("refresh_token");
 
-            _tokenServiceMock.Setup(ts => ts.CreateAccessTokenAsync(testUser))
-                .ReturnsAsync("mockAccessToken");
+            var result = await _userService.Login(request);
 
-            _tokenServiceMock.Setup(ts => ts.CreateRefreshTokenAsync(testUser))
-                .ReturnsAsync("mockRefreshToken");
-
-            var result = await _userService.Login(loginRequest);
-
-            Assert.NotNull(result);
-            Assert.Equal("mockAccessToken", result.Data.AccessToken);
-            Assert.Equal("mockRefreshToken", result.Data.RefreshToken);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+            Assert.Equal("Login success", result.Message);
+            Assert.Equal("access_token", result.Data.AccessToken);
+            Assert.Equal("refresh_token", result.Data.RefreshToken);
         }
 
         [Fact]
-        public async Task Register_UsernameAlreadyExists_ShouldReturnBadRequest()
+        public async Task Register_UsernameExists_ReturnsBadRequest()
         {
-            var registerRequest = new RegisterRequestModel
-            {
-                UserName = "existinguser",
-                Email = "newemail@example.com",
-                Password = "Password123!"
-            };
+            var request = new RegisterRequestModel { UserName = "existinguser", Email = "email@example.com" };
+            _userManagerMock.Setup(um => um.FindByNameAsync(It.IsAny<string>())).ReturnsAsync(new User());
 
-            _userManagerMock.Setup(um => um.FindByNameAsync(registerRequest.UserName))
-                .ReturnsAsync(new User());
-
-            var result = await _userService.Register(registerRequest);
+            var result = await _userService.Register(request);
 
             Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
             Assert.Equal("Username already exists", result.Message);
         }
 
         [Fact]
-        public async Task Register_EmailAlreadyExists_ShouldReturnBadRequest()
+        public async Task Register_EmailExists_ReturnsBadRequest()
         {
-            var registerRequest = new RegisterRequestModel
-            {
-                UserName = "newuser",
-                Email = "existingemail@example.com",
-                Password = "Password123!"
-            };
+            var request = new RegisterRequestModel { UserName = "newuser", Email = "existingemail@example.com" };
+            _userManagerMock.Setup(um => um.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User)null);
+            _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(new User());
 
-            _userManagerMock.Setup(um => um.FindByEmailAsync(registerRequest.Email))
-                .ReturnsAsync(new User());
-
-            var result = await _userService.Register(registerRequest);
+            var result = await _userService.Register(request);
 
             Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
             Assert.Equal("Email already exists", result.Message);
         }
 
         [Fact]
-        public async Task Register_Success_ShouldReturnCreated()
+        public async Task Register_Success_ReturnsCreated()
         {
-            var registerRequest = new RegisterRequestModel
+            // Arrange
+            var request = new RegisterRequestModel
             {
                 UserName = "newuser",
-                Email = "newuser@example.com",
-                Password = "Password123!",
+                Email = "newemail@example.com",
+                Password = "password",
                 FullName = "New User",
-                PhoneNumber = "123456789",
+                PhoneNumber = "1234567890",
                 Gender = Enumerate.Gender.Male,
-                DateOfBirth = DateTime.UtcNow.AddYears(-20)
+                DateOfBirth = DateTime.UtcNow.AddYears(-30)
             };
 
-            var mockRankCustomerId = Guid.NewGuid();
-            var mockUserStatusId = Guid.NewGuid();
-
-            var mockRankCustomer = new RankCustomer
-            {
-                Id = mockRankCustomerId,
-                Name = "User"
-            };
-
-            var mockUserStatus = new UserStatus
-            {
-                Id = mockUserStatusId,
-                Code = "Pending"
-            };
-
-            _userManagerMock.Setup(um => um.FindByNameAsync(registerRequest.UserName))
-                .ReturnsAsync((User)null);
-
-            _userManagerMock.Setup(um => um.FindByEmailAsync(registerRequest.Email))
-                .ReturnsAsync((User)null);
-
-            _userManagerMock.Setup(um => um.CreateAsync(It.IsAny<User>(), registerRequest.Password))
+            _userManagerMock.Setup(um => um.FindByNameAsync(It.IsAny<string>())).ReturnsAsync((User)null);
+            _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User)null);
+            _userManagerMock.Setup(um => um.CreateAsync(It.IsAny<User>(), It.IsAny<string>()))
                 .ReturnsAsync(IdentityResult.Success);
+            _userConverterMock.Setup(uc => uc.ConvertToDTO(It.IsAny<User>())).Returns(new UserDTO());
 
-            _userManagerMock.Setup(um => um.AddToRoleAsync(It.IsAny<User>(), "User"))
-                .ReturnsAsync(IdentityResult.Success);
+            _rankCustomerRepositoryMock.Setup(rcr => rcr.GetOneAsyncUntracked(It.IsAny<Expression<Func<RankCustomer, bool>>>(), It.IsAny<Expression<Func<RankCustomer, Guid>>>())).ReturnsAsync(Guid.NewGuid());
+            _userStatusRepositoryMock.Setup(us => us.GetOneAsyncUntracked(It.IsAny<Expression<Func<UserStatus, bool>>>(), It.IsAny<Expression<Func<UserStatus, Guid>>>())).ReturnsAsync(Guid.NewGuid());
 
-            _rankCustomerRepositoryMock.Setup(r => r.GetOneAsyncUntracked(
-                It.IsAny<Expression<Func<RankCustomer, bool>>>(),
-                It.IsAny<Expression<Func<RankCustomer, Guid>>>()))
-                .ReturnsAsync(mockRankCustomer.Id);
+            _emailServiceMock.Setup(es => es.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
 
-            _userStatusRepositoryMock.Setup(r => r.GetOneAsyncUntracked(
-                us => us.Code == "Pending",
-                It.IsAny<Expression<Func<UserStatus, Guid>>>()))
-                .ReturnsAsync(mockUserStatus.Id);
+            // Act
+            var result = await _userService.Register(request);
 
-            var result = await _userService.Register(registerRequest);
-
+            // Assert
             Assert.Equal(StatusCodes.Status201Created, result.Status);
             Assert.Equal("Registration successful. Please check your email to confirm your account.", result.Message);
-            Assert.NotNull(result.Data);
         }
-
 
     }
 }

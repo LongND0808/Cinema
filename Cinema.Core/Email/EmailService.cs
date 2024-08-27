@@ -5,7 +5,7 @@ using MimeKit;
 
 namespace Cinema.Core.Email
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
         private readonly EmailConfiguration _emailConfig;
 

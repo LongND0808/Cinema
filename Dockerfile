@@ -24,10 +24,24 @@ RUN dotnet publish -c Release -o out
 # Use the official runtime image for running the app
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
 WORKDIR /app
+
+# Copy the published app
 COPY --from=build /app/Cinema.Web/out .
 
-# Expose port 80 for the app
+# Create a directory for the certificates
+RUN mkdir -p /certs
+
+# Copy the SSL certificate to the container's certs directory
+COPY certs/aspnetapp.pfx /certs/aspnetapp.pfx
+
+# Expose ports 80 for HTTP and 443 for HTTPS
 EXPOSE 80
+EXPOSE 443
+
+# Set environment variables for Kestrel to use the SSL certificate
+ENV ASPNETCORE_URLS="https://+:443;http://+:80"
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/certs/aspnetapp.pfx
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password=longnd
 
 # Define the entry point for the container
 ENTRYPOINT ["dotnet", "Cinema.Web.dll"]

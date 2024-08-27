@@ -6,7 +6,7 @@ namespace Cinema.Core.Converters
 {
     public class UserConverter
     {
-        public UserDTO ConvertToDTO(User user)
+        public virtual UserDTO ConvertToDTO(User user)
         {
             if (user == null)
             {
