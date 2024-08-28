@@ -15,13 +15,14 @@ using Cinema.Core.DTOs;
 using Cinema.Core.Email;
 using System.Linq.Expressions;
 using Cinema.Core.Converters;
+using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Cinema.Core.Services
 {
     public class UserService : IUserService
     {
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<Role> _roleManager;
         private readonly SignInManager<User> _signInManager;
         private readonly Identity.ITokenService _tokenService;
         private readonly IEmailService _emailService;
@@ -34,7 +35,6 @@ namespace Cinema.Core.Services
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             Identity.ITokenService tokenService,
-            RoleManager<Role> roleManager,
             IEmailService emailService,
             IRepository<RankCustomer> rankCustomerRepository,
             IRepository<UserStatus> userStatusRepository,
@@ -44,7 +44,6 @@ namespace Cinema.Core.Services
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenService = tokenService;
-            _roleManager = roleManager;
             _emailService = emailService;
             _rankCustomerRepository = rankCustomerRepository;
             _userStatusRepository = userStatusRepository;
@@ -146,7 +145,7 @@ namespace Cinema.Core.Services
                 return new BaseResponseModel<UserDTO>
                 {
                     Status = StatusCodes.Status400BadRequest,
-                    Message = string.Join("; ", result.Errors.Select(e => e.Description)),
+                    Message = "Error creating User",
                     Data = null
                 };
             }
@@ -158,8 +157,8 @@ namespace Cinema.Core.Services
             var confirmEmail = new ConfirmEmail
             {
                 UserId = user.Id,
-                RequiredDateTime = DateTime.UtcNow,
-                ExpiredDateTime = DateTime.UtcNow.AddMinutes(5),
+                RequiredDateTime = DateTime.Now,
+                ExpiredDateTime = DateTime.Now.AddMinutes(5),
                 ConfirmCode = activeCode,
                 IsConfirm = false
             };
@@ -220,5 +219,88 @@ namespace Cinema.Core.Services
             }
         }
 
+        public async Task<BaseResponseModel<UserDTO>> AuthenticateRegistration(AuthenticateRegistrationRequestModel request)
+        {
+
+            var userStatusPending = await _userStatusRepository.GetOneAsyncUntracked(
+                filter: f => f.Code == "Pending",
+                selector: s => s.Id);
+
+            var userStatusActive = await _userStatusRepository.GetOneAsyncUntracked(
+                filter: f => f.Code == "Active",
+                selector: s => s.Id);
+
+            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+
+            if (existingUser == null)
+            {
+                return new BaseResponseModel<UserDTO>
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Message = "Error, user does not exist!",
+                    Data = null
+                };
+            }
+
+            if (existingUser.UserStatusId != userStatusPending)
+            {
+                return new BaseResponseModel<UserDTO>
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Message = "Error, user is not in pending status, cannot activate this account!",
+                    Data = null
+                };
+            }
+
+            var lastConfirmCode = await _confirmEmailRepository.GetOneAsyncUntracked<ConfirmEmail>(
+                filter: f => f.UserId == existingUser.Id,
+                orderBy: o => o.OrderByDescending(b => b.RequiredDateTime)
+            );
+
+            if (lastConfirmCode == null)
+            {
+                return new BaseResponseModel<UserDTO>
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Message = "Activation code does not existed, please request a new code!",
+                    Data = null
+                };
+            }    
+
+            if (request.ConfirmCode == lastConfirmCode.ConfirmCode)
+            {
+                if (DateTime.Now < lastConfirmCode.ExpiredDateTime)
+                {
+                    existingUser.UserStatusId = userStatusActive;
+                    await _userManager.UpdateAsync(existingUser);
+
+                    return new BaseResponseModel<UserDTO>
+                    {
+                        Status = StatusCodes.Status200OK,
+                        Message = "Activate account successfully, welcome to our website!",
+                        Data = _userConverter.ConvertToDTO(existingUser)
+                    };
+                }
+                else
+                {
+                    return new BaseResponseModel<UserDTO>
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Message = "Activation code has expired, please request a new code!",
+                        Data = null
+                    };
+                }
+            }
+            else
+            {
+                return new BaseResponseModel<UserDTO>
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Message = "Activation code does not match, please try again!",
+                    Data = null
+                };
+            }
+
+        }
     }
 }

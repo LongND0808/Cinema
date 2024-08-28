@@ -39,7 +39,6 @@ namespace Cinema.Tests.Services
             _userManagerMock = CreateMockUserManager();
             _signInManagerMock = CreateMockSignInManager();
             _tokenServiceMock = new Mock<Core.Identity.ITokenService>();
-            _roleManagerMock = CreateMockRoleManager();
 
             _emailServiceMock = new Mock<IEmailService>();
             _emailServiceMock.Setup(es => es.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
@@ -53,7 +52,6 @@ namespace Cinema.Tests.Services
                 _userManagerMock.Object,
                 _signInManagerMock.Object,
                 _tokenServiceMock.Object,
-                _roleManagerMock.Object,
                 _emailServiceMock.Object,
                 _rankCustomerRepositoryMock.Object,
                 _userStatusRepositoryMock.Object,
@@ -74,19 +72,6 @@ namespace Cinema.Tests.Services
                 _userManagerMock.Object,
                 new Mock<IHttpContextAccessor>().Object,
                 new Mock<IUserClaimsPrincipalFactory<User>>().Object,
-                null,
-                null,
-                null,
-                null
-            );
-        }
-
-        private Mock<RoleManager<Role>> CreateMockRoleManager()
-        {
-            var roleStoreMock = new Mock<IRoleStore<Role>>();
-
-            return new Mock<RoleManager<Role>>(
-                roleStoreMock.Object,
                 null,
                 null,
                 null,
@@ -184,10 +169,15 @@ namespace Cinema.Tests.Services
             _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User)null);
             _userManagerMock.Setup(um => um.CreateAsync(It.IsAny<User>(), It.IsAny<string>()))
                 .ReturnsAsync(IdentityResult.Success);
-            _userConverterMock.Setup(uc => uc.ConvertToDTO(It.IsAny<User>())).Returns(new UserDTO());
+            _rankCustomerRepositoryMock.Setup(rcr => rcr.GetOneAsyncUntracked(It.IsAny<Expression<Func<RankCustomer, bool>>>(),
+                null,
+                It.IsAny<Expression<Func<RankCustomer, Guid>>>())).ReturnsAsync(Guid.NewGuid());
 
-            _rankCustomerRepositoryMock.Setup(rcr => rcr.GetOneAsyncUntracked(It.IsAny<Expression<Func<RankCustomer, bool>>>(), It.IsAny<Expression<Func<RankCustomer, Guid>>>())).ReturnsAsync(Guid.NewGuid());
-            _userStatusRepositoryMock.Setup(us => us.GetOneAsyncUntracked(It.IsAny<Expression<Func<UserStatus, bool>>>(), It.IsAny<Expression<Func<UserStatus, Guid>>>())).ReturnsAsync(Guid.NewGuid());
+            _userStatusRepositoryMock.Setup(us => us.GetOneAsyncUntracked(It.IsAny<Expression<Func<UserStatus, bool>>>(),
+                null,
+                It.IsAny<Expression<Func<UserStatus, Guid>>>())).ReturnsAsync(Guid.NewGuid());
+
+            _userConverterMock.Setup(uc => uc.ConvertToDTO(It.IsAny<User>())).Returns(new UserDTO());
 
             _emailServiceMock.Setup(es => es.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
 
@@ -197,6 +187,85 @@ namespace Cinema.Tests.Services
             // Assert
             Assert.Equal(StatusCodes.Status201Created, result.Status);
             Assert.Equal("Registration successful. Please check your email to confirm your account.", result.Message);
+        }
+
+
+        [Fact]
+        public async Task AuthenticateRegistration_UserDoesNotExist_ReturnsBadRequest()
+        {
+            // Arrange
+            var request = new AuthenticateRegistrationRequestModel { Email = "nonexistent@example.com", ConfirmCode = "123456" };
+
+            _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync((User)null);
+
+            // Act
+            var result = await _userService.AuthenticateRegistration(request);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+            Assert.Equal("Error, user does not exist!", result.Message);
+            Assert.Null(result.Data);
+        }
+
+        [Fact]
+        public async Task AuthenticateRegistration_ActivationCodeExpired_ReturnsBadRequest()
+        {
+            // Arrange
+            var user = new User { Email = "existinguser@example.com", UserStatusId = Guid.NewGuid() };
+            var request = new AuthenticateRegistrationRequestModel { Email = user.Email, ConfirmCode = "123456" };
+
+            _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
+            _userStatusRepositoryMock.Setup(us => us.GetOneAsyncUntracked(It.IsAny<Expression<Func<UserStatus, bool>>>(), null,
+                It.IsAny<Expression<Func<UserStatus, Guid>>>())).ReturnsAsync(user.UserStatusId);
+            _confirmEmailRepositoryMock.Setup(ce => ce.GetOneAsyncUntracked<ConfirmEmail>(It.IsAny<Expression<Func<ConfirmEmail, bool>>>(), It.IsAny<Expression<Func<IQueryable<ConfirmEmail>, IOrderedQueryable<ConfirmEmail>>>?>(), null)).ReturnsAsync(new ConfirmEmail
+                {
+                    ConfirmCode = "123456",
+                    ExpiredDateTime = DateTime.Now.AddMinutes(-1)  // Đã hết hạn
+                });
+
+            // Act
+            var result = await _userService.AuthenticateRegistration(request);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+            Assert.Equal("Activation code has expired, please request a new code!", result.Message);
+            Assert.Null(result.Data);
+        }
+
+        [Fact]
+        public async Task AuthenticateRegistration_SuccessfulActivation_ReturnsOk()
+        {
+            // Arrange
+            var user = new User { Email = "existinguser@example.com", UserStatusId = Guid.NewGuid() };
+            var request = new AuthenticateRegistrationRequestModel { Email = user.Email, ConfirmCode = "123456" };
+
+            var userStatusPending = user.UserStatusId;
+            var userStatusActive = Guid.NewGuid();
+
+            _userManagerMock.Setup(um => um.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
+            _userStatusRepositoryMock.SetupSequence(us => us.GetOneAsyncUntracked(
+                    It.IsAny<Expression<Func<UserStatus, bool>>>(),
+                    null,
+                    It.IsAny<Expression<Func<UserStatus, Guid>>>()
+                ))
+                .ReturnsAsync(userStatusPending) 
+                .ReturnsAsync(userStatusActive); 
+
+            _confirmEmailRepositoryMock.Setup(ce => ce.GetOneAsyncUntracked<ConfirmEmail>(It.IsAny<Expression<Func<ConfirmEmail, bool>>>(), It.IsAny<Expression<Func<IQueryable<ConfirmEmail>, IOrderedQueryable<ConfirmEmail>>>?>(), null)).ReturnsAsync(new ConfirmEmail
+                {
+                    ConfirmCode = "123456",
+                    ExpiredDateTime = DateTime.Now.AddMinutes(10)  
+                });
+            _userManagerMock.Setup(um => um.UpdateAsync(It.IsAny<User>())).ReturnsAsync(IdentityResult.Success);
+            _userConverterMock.Setup(uc => uc.ConvertToDTO(It.IsAny<User>())).Returns(new UserDTO());
+
+            // Act
+            var result = await _userService.AuthenticateRegistration(request);
+
+            // Assert
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+            Assert.Equal("Activate account successfully, welcome to our website!", result.Message);
+            Assert.NotNull(result.Data);
         }
 
     }

@@ -51,7 +51,7 @@ public class TokenService : Cinema.Core.Identity.ITokenService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(tokenValidityInHours),
+            Expires = DateTime.Now.AddHours(tokenValidityInHours),
             Issuer = issuer,
             Audience = audience,
             SigningCredentials = new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
@@ -70,7 +70,7 @@ public class TokenService : Cinema.Core.Identity.ITokenService
 
         var lastToken = existingTokens.LastOrDefault();
 
-        if (lastToken != null && lastToken.ExpiredTime > DateTime.UtcNow)
+        if (lastToken != null && lastToken.ExpiredTime > DateTime.Now)
         {
             return lastToken.Token;
         }
@@ -82,8 +82,8 @@ public class TokenService : Cinema.Core.Identity.ITokenService
         {
             Token = refreshToken,
             UserId = user.Id,
-            CreateTime = DateTime.UtcNow,
-            ExpiredTime = DateTime.UtcNow.AddDays(refreshTokenValidity),
+            CreateTime = DateTime.Now,
+            ExpiredTime = DateTime.Now.AddDays(refreshTokenValidity),
         };
 
         await _refreshTokenRepository.AddAsync(refreshTokenEntity);

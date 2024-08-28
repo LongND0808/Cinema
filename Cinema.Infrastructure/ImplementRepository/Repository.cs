@@ -69,7 +69,9 @@ namespace Cinema.Infrastructure.ImplementRepository
             throw new InvalidOperationException("Invalid entity type");
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null)
+        public async Task<IEnumerable<TEntity>> GetAllAsync(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null)
         {
             IQueryable<TEntity> query = _context.Set<TEntity>();
 
@@ -78,10 +80,17 @@ namespace Cinema.Infrastructure.ImplementRepository
                 query = query.Where(filter);
             }
 
+            if (orderBy != null)
+            {
+                query = orderBy.Compile()(query);
+            }
+
             return await query.ToListAsync();
         }
 
-        public async Task<TEntity?> GetOneAsync(Expression<Func<TEntity, bool>>? filter = null)
+        public async Task<TEntity?> GetOneAsync(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null)
         {
             IQueryable<TEntity> query = _context.Set<TEntity>();
 
@@ -90,27 +99,9 @@ namespace Cinema.Infrastructure.ImplementRepository
                 query = query.Where(filter);
             }
 
-            return await query.FirstOrDefaultAsync();
-        }
-        public async Task<IEnumerable<TEntity>> GetAllAsyncUntracked(Expression<Func<TEntity, bool>>? filter = null)
-        {
-            IQueryable<TEntity> query = _context.Set<TEntity>().AsNoTracking();
-
-            if (filter != null)
+            if (orderBy != null)
             {
-                query = query.Where(filter);
-            }
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<TEntity?> GetOneAsyncUntracked(Expression<Func<TEntity, bool>>? filter = null)
-        {
-            IQueryable<TEntity> query = _context.Set<TEntity>().AsNoTracking();
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
+                query = orderBy.Compile()(query);
             }
 
             return await query.FirstOrDefaultAsync();
@@ -118,6 +109,7 @@ namespace Cinema.Infrastructure.ImplementRepository
 
         public async Task<TResult[]?> GetAllAsyncUntracked<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null,
             Expression<Func<TEntity, TResult>>? selector = null)
         {
             IQueryable<TEntity> query = _context.Set<TEntity>().AsNoTracking();
@@ -125,6 +117,11 @@ namespace Cinema.Infrastructure.ImplementRepository
             if (filter != null)
             {
                 query = query.Where(filter);
+            }
+
+            if (orderBy != null)
+            {
+                query = orderBy.Compile()(query);
             }
 
             if (selector != null)
@@ -137,9 +134,9 @@ namespace Cinema.Infrastructure.ImplementRepository
                 return results.Select(x => (TResult)(object)x).ToArray();
             }
         }
-
         public async Task<TResult?> GetOneAsyncUntracked<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null,
             Expression<Func<TEntity, TResult>>? selector = null)
         {
             IQueryable<TEntity> query = _context.Set<TEntity>().AsNoTracking();
@@ -149,6 +146,11 @@ namespace Cinema.Infrastructure.ImplementRepository
                 query = query.Where(filter);
             }
 
+            if (orderBy != null)
+            {
+                query = orderBy.Compile()(query);
+            }
+
             if (selector != null)
             {
                 return await query.Select(selector).FirstOrDefaultAsync();
@@ -156,8 +158,9 @@ namespace Cinema.Infrastructure.ImplementRepository
             else
             {
                 var result = await query.FirstOrDefaultAsync();
-                return (TResult?) (object?) result; 
+                return (TResult?)(object?)result;
             }
         }
+
     }
 }

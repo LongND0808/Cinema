@@ -30,5 +30,11 @@ namespace Cinema.Web.Controllers
             var response = await _userService.Register(request);
             return Ok(response);
         }
+        [HttpPost("authenticate-registration")]
+        public async Task<IActionResult> AuthenticateRegistration(AuthenticateRegistrationRequestModel request)
+        {
+            var response = await _userService.AuthenticateRegistration(request);
+            return Ok(response);
+        }
     }
 }

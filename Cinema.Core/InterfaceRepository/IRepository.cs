@@ -10,14 +10,21 @@ namespace Cinema.Core.InterfaceRepository
     public interface IRepository<TEntity> where TEntity : class
     {
         Task<TEntity?> GetByIdAsync(Guid id);
-        Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null);
-        Task<TEntity?> GetOneAsync(Expression<Func<TEntity, bool>>? filter = null);
-        Task<IEnumerable<TEntity>> GetAllAsyncUntracked(Expression<Func<TEntity, bool>>? filter = null);
-        Task<TEntity?> GetOneAsyncUntracked(Expression<Func<TEntity, bool>>? filter = null);
-        Task<TResult[]?> GetAllAsyncUntracked<TResult>(Expression<Func<TEntity, bool>>? filter = null,
+        Task<IEnumerable<TEntity>> GetAllAsync(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null);
+        Task<TEntity?> GetOneAsync(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null);
+        Task<TResult[]?> GetAllAsyncUntracked<TResult>(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null,
             Expression<Func<TEntity, TResult>>? selector = null);
-        Task<TResult?> GetOneAsyncUntracked<TResult>(Expression<Func<TEntity, bool>>? filter = null, 
+        Task<TResult?> GetOneAsyncUntracked<TResult>(
+            Expression<Func<TEntity, bool>>? filter = null,
+            Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null,
             Expression<Func<TEntity, TResult>>? selector = null);
+
         Task AddAsync(TEntity entity);
         Task UpdateAsync(TEntity entity);
         Task DeleteAsync(TEntity entity);
