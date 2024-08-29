@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Cinema.Core.RequestModel
 {
-    public class ForgotPasswordRequestModel
+    public class ResendActiveCodeRequestModel
     {
         public string Email { get; set; }
     }

@@ -23,7 +23,7 @@ namespace Cinema.Core.Email
         private MimeMessage CreateEmailMessage(string to, string subject, string body)
         {
             var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress("Sender Name", _emailConfig.From));
+            emailMessage.From.Add(new MailboxAddress("LongND0808", _emailConfig.From));
             emailMessage.To.Add(MailboxAddress.Parse(to));
             emailMessage.Subject = subject;
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };

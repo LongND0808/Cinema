@@ -267,6 +267,5 @@ namespace Cinema.Tests.Services
             Assert.Equal("Activate account successfully, welcome to our website!", result.Message);
             Assert.NotNull(result.Data);
         }
-
     }
 }

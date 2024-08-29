@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Cinema.Core.ResponseModel
 {
-    public class BaseResponseModel<T> where T : class?
+    public class BaseResponseModel<T> where T : class
     {
         public int Status {  get; set; }
         public string Message { get; set; }
