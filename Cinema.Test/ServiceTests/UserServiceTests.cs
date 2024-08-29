@@ -17,6 +17,7 @@ using System.Linq.Expressions;
 using Cinema.Core.Converters;
 using Cinema.Core.Email;
 using Cinema.Core.DTOs;
+using Cinema.Core.IConverters;
 
 namespace Cinema.Tests.Services
 {
@@ -25,11 +26,10 @@ namespace Cinema.Tests.Services
         private readonly Mock<UserManager<User>> _userManagerMock;
         private readonly Mock<SignInManager<User>> _signInManagerMock;
         private readonly Mock<Core.Identity.ITokenService> _tokenServiceMock;
-        private readonly Mock<RoleManager<Role>> _roleManagerMock;
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Mock<IRepository<RankCustomer>> _rankCustomerRepositoryMock;
         private readonly Mock<IRepository<UserStatus>> _userStatusRepositoryMock;
-        private readonly Mock<UserConverter> _userConverterMock;
+        private readonly Mock<IUserConverter> _userConverterMock;
         private readonly Mock<IRepository<ConfirmEmail>> _confirmEmailRepositoryMock;
 
         private readonly UserService _userService;
@@ -45,7 +45,7 @@ namespace Cinema.Tests.Services
 
             _rankCustomerRepositoryMock = new Mock<IRepository<RankCustomer>>();
             _userStatusRepositoryMock = new Mock<IRepository<UserStatus>>();
-            _userConverterMock = new Mock<UserConverter>();
+            _userConverterMock = new Mock<IUserConverter>();
             _confirmEmailRepositoryMock = new Mock<IRepository<ConfirmEmail>>();
 
             _userService = new UserService(
@@ -158,7 +158,7 @@ namespace Cinema.Tests.Services
             {
                 UserName = "newuser",
                 Email = "newemail@example.com",
-                Password = "password",
+                Password = "Password@123",
                 FullName = "New User",
                 PhoneNumber = "1234567890",
                 Gender = Enumerate.Gender.Male,

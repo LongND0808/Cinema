@@ -23,6 +23,5 @@ namespace Cinema.Domain.Entities
         public virtual Room? Room { get; set; }
 
         public virtual ICollection<Ticket>? Ticket { get; set; }
-
     }
 }

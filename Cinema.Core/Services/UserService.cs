@@ -20,6 +20,8 @@ using System.Reflection.Metadata.Ecma335;
 using System.Data.SqlTypes;
 using System.Text;
 using Cinema.Common.Constant;
+using System.Text.RegularExpressions;
+using Cinema.Core.IConverters;
 
 namespace Cinema.Core.Services
 {
@@ -32,7 +34,7 @@ namespace Cinema.Core.Services
         private readonly IEmailService _emailService;
         private readonly IRepository<RankCustomer> _rankCustomerRepository;
         private readonly IRepository<UserStatus> _userStatusRepository;
-        private readonly UserConverter _userConverter;
+        private readonly IUserConverter _userConverter;
         private readonly IRepository<ConfirmEmail> _confirmEmailRepository;
 
         private readonly Random _random = new();
@@ -46,7 +48,7 @@ namespace Cinema.Core.Services
             IEmailService emailService,
             IRepository<RankCustomer> rankCustomerRepository,
             IRepository<UserStatus> userStatusRepository,
-            UserConverter userConverter,
+            IUserConverter userConverter,
             IRepository<ConfirmEmail> confirmEmailRepository)
         {
             _userManager = userManager;
@@ -139,7 +141,9 @@ namespace Cinema.Core.Services
 
             password.Append(Constant.DigitChars[_random.Next(Constant.DigitChars.Length)]);
 
-            for (int i = 3; i < length; i++)
+            password.Append(Constant.LowercaseChars[_random.Next(Constant.LowercaseChars.Length)]);
+
+            for (int i = 4; i < length; i++)
             {
                 password.Append(Constant.AllChars[_random.Next(Constant.AllChars.Length)]);
             }
@@ -220,6 +224,16 @@ namespace Cinema.Core.Services
                 {
                     Status = StatusCodes.Status400BadRequest,
                     Message = "Email already exists",
+                    Data = null
+                };
+            }
+
+            if(!Regex.IsMatch(request.Password, Constant.PasswordRegexPattern))
+            {
+                return new BaseResponseModel<UserDTO>
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Message = "Password is not valid",
                     Data = null
                 };
             }
@@ -556,6 +570,16 @@ namespace Cinema.Core.Services
                 {
                     Status = StatusCodes.Status404NotFound,
                     Message = "User not found, please try again.",
+                    Data = null
+                };
+            }
+
+            if (!Regex.IsMatch(request.NewPassword, Constant.PasswordRegexPattern))
+            {
+                return new BaseResponseModel<object>
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Message = "New Password is not valid, please try again.",
                     Data = null
                 };
             }

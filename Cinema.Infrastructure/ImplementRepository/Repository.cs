@@ -107,7 +107,7 @@ namespace Cinema.Infrastructure.ImplementRepository
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<TResult[]?> GetAllAsyncUntracked<TResult>(
+        public async Task<IEnumerable<TResult>> GetAllAsyncUntracked<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null,
             Expression<Func<TEntity, TResult>>? selector = null)
@@ -126,14 +126,15 @@ namespace Cinema.Infrastructure.ImplementRepository
 
             if (selector != null)
             {
-                return await query.Select(selector).ToArrayAsync();
+                return await query.Select(selector).ToListAsync();
             }
             else
             {
-                var results = await query.ToArrayAsync();
-                return results.Select(x => (TResult)(object)x).ToArray();
+                return await query.Cast<TResult>().ToListAsync();
             }
         }
+
+
         public async Task<TResult?> GetOneAsyncUntracked<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null,
@@ -157,8 +158,8 @@ namespace Cinema.Infrastructure.ImplementRepository
             }
             else
             {
-                var result = await query.FirstOrDefaultAsync();
-                return (TResult?)(object?)result;
+                var result = await query.Cast<TResult>().FirstOrDefaultAsync();
+                return result;
             }
         }
 

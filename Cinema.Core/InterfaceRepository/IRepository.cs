@@ -16,7 +16,7 @@ namespace Cinema.Core.InterfaceRepository
         Task<TEntity?> GetOneAsync(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null);
-        Task<TResult[]?> GetAllAsyncUntracked<TResult>(
+        Task<IEnumerable<TResult>> GetAllAsyncUntracked<TResult>(
             Expression<Func<TEntity, bool>>? filter = null,
             Expression<Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>>? orderBy = null,
             Expression<Func<TEntity, TResult>>? selector = null);

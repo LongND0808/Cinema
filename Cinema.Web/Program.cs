@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Cryptography.X509Certificates;
 using Cinema.Core.Converters;
+using Cinema.Core.IConverters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,10 +31,12 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IMovieService, MovieService>();
 #endregion
 
 #region Add Converter
-builder.Services.AddTransient<UserConverter>();
+builder.Services.AddScoped<IUserConverter, UserConverter>();
+builder.Services.AddScoped<IMovieConverter, MovieConverter>();
 #endregion
 
 builder.Services.AddIdentity<User, Role>()

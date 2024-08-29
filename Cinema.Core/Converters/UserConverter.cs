@@ -1,12 +1,14 @@
 ﻿using Cinema.Core.DTOs;
+using Cinema.Core.IConverters;
 using Cinema.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using System;
 
 namespace Cinema.Core.Converters
 {
-    public class UserConverter
+    public class UserConverter : IUserConverter
     {
-        public virtual UserDTO ConvertToDTO(User user)
+        public UserDTO ConvertToDTO(User user)
         {
             if (user == null)
             {
@@ -27,6 +29,30 @@ namespace Cinema.Core.Converters
                 Point = user.Point,
                 IsDeleted = user.isDeleted,
                 PhoneNumber = user.PhoneNumber,
+            };
+        }
+
+        public User ConvertToEntity(UserDTO userDTO)
+        {
+            if (userDTO == null)
+            {
+                throw new ArgumentNullException(nameof(userDTO), "UserDTO cannot be null");
+            }
+
+            return new User
+            {
+                Id = userDTO.Id,
+                UserName = userDTO.UserName,
+                Email = userDTO.Email,
+                FullName = userDTO.FullName,
+                DateOfBirth = userDTO.DateOfBirth,
+                Gender = userDTO.Gender,
+                AvatarUrl = userDTO.AvatarUrl,
+                RankCustomerId = userDTO.RankCustomerId,
+                UserStatusId = userDTO.UserStatusId,
+                Point = userDTO.Point,
+                isDeleted = userDTO.IsDeleted,
+                PhoneNumber = userDTO.PhoneNumber
             };
         }
     }
