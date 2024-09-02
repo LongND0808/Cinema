@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cinema.Core.RequestModel
+namespace Cinema.Core.RequestModel.Movie
 {
     public class GetMovieRequestModel
     {

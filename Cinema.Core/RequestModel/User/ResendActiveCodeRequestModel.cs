@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cinema.Core.RequestModel
+namespace Cinema.Core.RequestModel.User
 {
-    public class ForgotPasswordRequestModel
+    public class ResendActiveCodeRequestModel
     {
         public string Email { get; set; }
     }

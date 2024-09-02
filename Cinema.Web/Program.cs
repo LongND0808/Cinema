@@ -17,6 +17,7 @@ using System.Text;
 using System.Security.Cryptography.X509Certificates;
 using Cinema.Core.Converters;
 using Cinema.Core.IConverters;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,12 +33,16 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IMovieService, MovieService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IManageUserService, ManageUserService>();
 #endregion
 
 #region Add Converter
 builder.Services.AddScoped<IUserConverter, UserConverter>();
 builder.Services.AddScoped<IMovieConverter, MovieConverter>();
 #endregion
+
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddIdentity<User, Role>()
     .AddEntityFrameworkStores<ApplicationDbContext>()

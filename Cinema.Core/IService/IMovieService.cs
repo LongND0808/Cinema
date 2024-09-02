@@ -1,5 +1,5 @@
 ﻿using Cinema.Core.DTOs;
-using Cinema.Core.RequestModel;
+using Cinema.Core.RequestModel.Movie;
 using Cinema.Core.ResponseModel;
 using System;
 using System.Collections.Generic;

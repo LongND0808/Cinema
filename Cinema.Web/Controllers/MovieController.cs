@@ -1,9 +1,12 @@
 ﻿using Cinema.Core.IService;
-using Cinema.Core.RequestModel;
+using Cinema.Core.RequestModel.Movie;
 using Cinema.Core.ResponseModel;
 using Cinema.Core.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Cinema.Web.Controllers
 {
@@ -25,14 +28,15 @@ namespace Cinema.Web.Controllers
             return Ok(response);
         }
 
-        [HttpPost("get-one-movie")]
-        public async Task<IActionResult> GetMovieById([FromBody] Guid requestId)
+        [HttpGet("get-one-movie")]
+        public async Task<IActionResult> GetMovieById(Guid requestId)
         {
             var response = await _movieService.GetMovieById(requestId);
             return Ok(response);
         }
 
         [HttpPost("create-movie")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> CreateMovie([FromBody] CreateMovieRequestModel request)
         {
             var response = await _movieService.CreateMovie(request);
@@ -40,6 +44,7 @@ namespace Cinema.Web.Controllers
         }
 
         [HttpPost("update-movie")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> UpdateMovie([FromBody] UpdateMovieRequestModel request)
         {
             var response = await _movieService.UpdateMovie(request);

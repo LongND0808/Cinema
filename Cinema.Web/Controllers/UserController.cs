@@ -1,5 +1,5 @@
 ﻿using Cinema.Core.IService;
-using Cinema.Core.RequestModel;
+using Cinema.Core.RequestModel.User;
 using Cinema.Core.ResponseModel;
 using Cinema.Core.Services;
 using Microsoft.AspNetCore.Authorization;

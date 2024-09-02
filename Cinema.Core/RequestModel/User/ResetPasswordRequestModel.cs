@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cinema.Core.RequestModel
+namespace Cinema.Core.RequestModel.User
 {
-    public class ChangePasswordRequestModel
+    public class ResetPasswordRequestModel
     {
         public string Email { get; set; }
-        public string OldPassword { get ; set; }
-        public string NewPassword { get; set; }
+        public string ResetCode { get; set; }
     }
 }

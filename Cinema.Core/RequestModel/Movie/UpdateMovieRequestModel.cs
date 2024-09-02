@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cinema.Core.RequestModel
+namespace Cinema.Core.RequestModel.Movie
 {
     public class UpdateMovieRequestModel
     {
+        public Guid Id { get; set; }
         public int MovieDuration { get; set; }
         public DateTime EndTime { get; set; }
         public DateTime PremiereDate { get; set; }

@@ -2,7 +2,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Cinema.Core.RequestModel
+namespace Cinema.Core.RequestModel.User
 {
     public class RegisterRequestModel
     {
@@ -16,6 +16,6 @@ namespace Cinema.Core.RequestModel
 
         public string PhoneNumber { get; set; }
         public Enumerate.Gender Gender { get; set; }
-        public DateTime DateOfBirth {  get; set; }
+        public DateTime DateOfBirth { get; set; }
     }
 }

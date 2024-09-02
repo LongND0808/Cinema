@@ -1,5 +1,4 @@
 ﻿using Cinema.Core.IService;
-using Cinema.Core.RequestModel;
 using Cinema.Core.ResponseModel;
 using Cinema.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -22,12 +21,13 @@ using System.Text;
 using Cinema.Common.Constant;
 using System.Text.RegularExpressions;
 using Cinema.Core.IConverters;
+using Cinema.Core.RequestModel.User;
 
 namespace Cinema.Core.Services
 {
     public class UserService : IUserService
     {
-        #region private fields
+        #region Private fields
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly Identity.ITokenService _tokenService;
@@ -40,7 +40,7 @@ namespace Cinema.Core.Services
         private readonly Random _random = new();
         #endregion
 
-        #region constructer
+        #region Constructer
         public UserService(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
@@ -203,7 +203,7 @@ namespace Cinema.Core.Services
 
         #endregion
 
-        #region Register moethod
+        #region Register method
         public async Task<BaseResponseModel<UserDTO>> Register(RegisterRequestModel request)
         {
             var existingUser = await _userManager.FindByNameAsync(request.UserName);
