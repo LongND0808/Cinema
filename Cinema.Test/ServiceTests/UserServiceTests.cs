@@ -18,6 +18,7 @@ using Cinema.Core.Converters;
 using Cinema.Core.Email;
 using Cinema.Core.DTOs;
 using Cinema.Core.IConverters;
+using Cinema.Core.RequestModel.User;
 
 namespace Cinema.Tests.Services
 {
